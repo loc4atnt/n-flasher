@@ -8,7 +8,7 @@ ESP32_DEFAULT_BOOTLOADER_FORMAT = (
     "1.0.4/tools/sdk/bin/bootloader_$FLASH_MODE$_$FLASH_FREQ$.bin"
 )
 ESP32_DEFAULT_PARTITIONS = (
-    "https://raw.githubusercontent.com/esphome/esphomeflasher/main/partitions.bin"
+    "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions.min_spiffs.bin"
 )
 
 # https://stackoverflow.com/a/3809435/8924614
