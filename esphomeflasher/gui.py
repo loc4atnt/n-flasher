@@ -157,13 +157,14 @@ class RedirectText(TextIOBase):
 
 
 class FlashingThread(threading.Thread):
-    def __init__(self, parent, firmware, port, flashscheme, show_logs=False):
+    def __init__(self, parent, firmware, port, flashscheme, could_erase_flash, show_logs=False):
         threading.Thread.__init__(self)
         self.daemon = True
         self._parent = parent
         self._firmware = firmware
         self._port = port
         self._flashscheme = flashscheme
+        self.could_erase_flash = could_erase_flash
         self._show_logs = show_logs
 
     def run(self):
@@ -173,6 +174,8 @@ class FlashingThread(threading.Thread):
             argv = ["esphomeflasher", "--port", self._port, "--partitions", self._flashscheme['path'], self._firmware]
             if self._show_logs:
                 argv.append("--show-logs")
+            if not self.could_erase_flash:
+                argv.append("--no-erase")
             run_esphomeflasher(argv)
         except Exception as err:
             print(f"Unexpected error: {err}")
@@ -193,6 +196,7 @@ class MainFrame(wx.Frame):
         self._firmware = None
         self._port = None
         self._flashscheme = None
+        self._could_erase_flash = True;
 
         self._init_ui()
 
@@ -208,12 +212,12 @@ class MainFrame(wx.Frame):
 
         def on_clicked(event):
             self.console_ctrl.SetValue("")
-            worker = FlashingThread(self, self._firmware, self._port, self._flashscheme)
+            worker = FlashingThread(self, self._firmware, self._port, self._flashscheme, self._could_erase_flash)
             worker.start()
 
         def on_logs_clicked(event):
             self.console_ctrl.SetValue("")
-            worker = FlashingThread(self, "dummy", self._port, self._flashscheme, show_logs=True)
+            worker = FlashingThread(self, "dummy", self._port, self._flashscheme, self._could_erase_flash, show_logs=True)
             worker.start()
 
         def on_select_port(event):
@@ -227,6 +231,15 @@ class MainFrame(wx.Frame):
 
         def on_pick_file(event):
             self._firmware = event.GetPath().replace("'", "")
+        
+        def on_erase_checkbox_toggle(event):
+            checkbox = event.GetEventObject()
+            checked = checkbox.GetValue()
+            self._could_erase_flash = checked;
+            # if checked:
+            #     print('Checkbox is checked')
+            # else:
+            #     print('Checkbox is unchecked')
 
         panel = wx.Panel(self)
 
@@ -253,6 +266,10 @@ class MainFrame(wx.Frame):
         serial_boxsizer.Add(self.choice, 1, wx.EXPAND)
         serial_boxsizer.AddStretchSpacer(0)
         serial_boxsizer.Add(reload_button, 0, wx.ALIGN_NOT, 20)
+
+        erase_checkbox = wx.CheckBox(panel, label='Erase flash?')
+        erase_checkbox.Bind(wx.EVT_CHECKBOX, on_erase_checkbox_toggle)
+        erase_checkbox.SetValue(self._could_erase_flash)
 
         self.flashscheme_choice = wx.Choice(panel, choices=list(ESP32_FLASH_SCHEME_MAP.keys()))
         self.flashscheme_choice.Bind(wx.EVT_CHOICE, on_select_flashscheme)
@@ -299,6 +316,9 @@ class MainFrame(wx.Frame):
                 # Firmware selection row (growable)
                 file_label,
                 (file_picker, 1, wx.EXPAND),
+                # Erasing flash selection
+                (wx.StaticText(panel, label="")),
+                (erase_checkbox, 1, wx.EXPAND),
                 # Flash ESP button
                 (wx.StaticText(panel, label="")),
                 (button, 1, wx.EXPAND),
@@ -310,7 +330,7 @@ class MainFrame(wx.Frame):
                 (self.console_ctrl, 1, wx.EXPAND),
             ]
         )
-        fgs.AddGrowableRow(5, 1)
+        fgs.AddGrowableRow(6, 1)
         fgs.AddGrowableCol(1, 1)
         hbox.Add(fgs, proportion=2, flag=wx.ALL | wx.EXPAND, border=15)
         panel.SetSizer(hbox)
