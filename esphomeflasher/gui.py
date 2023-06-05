@@ -11,6 +11,11 @@ import wx.lib.mixins.inspection
 from wx.lib.embeddedimage import PyEmbeddedImage
 
 from esphomeflasher.helpers import list_serial_ports
+from esphomeflasher.const import (
+    ESP32_FLASH_SCHEME_MAP,
+    WINDOW_HEIGHT,
+    WINDOW_WIDTH,
+);
 
 # pylint: disable=no-member
 
@@ -152,19 +157,20 @@ class RedirectText(TextIOBase):
 
 
 class FlashingThread(threading.Thread):
-    def __init__(self, parent, firmware, port, show_logs=False):
+    def __init__(self, parent, firmware, port, flashscheme, show_logs=False):
         threading.Thread.__init__(self)
         self.daemon = True
         self._parent = parent
         self._firmware = firmware
         self._port = port
+        self._flashscheme = flashscheme
         self._show_logs = show_logs
 
     def run(self):
         try:
             from esphomeflasher.__main__ import run_esphomeflasher
 
-            argv = ["esphomeflasher", "--port", self._port, self._firmware]
+            argv = ["esphomeflasher", "--port", self._port, "--partitions", self._flashscheme['path'], self._firmware]
             if self._show_logs:
                 argv.append("--show-logs")
             run_esphomeflasher(argv)
@@ -180,12 +186,13 @@ class MainFrame(wx.Frame):
             parent,
             -1,
             title,
-            size=(725, 650),
+            size=(WINDOW_WIDTH, WINDOW_HEIGHT),
             style=wx.DEFAULT_FRAME_STYLE | wx.NO_FULL_REPAINT_ON_RESIZE,
         )
 
         self._firmware = None
         self._port = None
+        self._flashscheme = None
 
         self._init_ui()
 
@@ -201,17 +208,22 @@ class MainFrame(wx.Frame):
 
         def on_clicked(event):
             self.console_ctrl.SetValue("")
-            worker = FlashingThread(self, self._firmware, self._port)
+            worker = FlashingThread(self, self._firmware, self._port, self._flashscheme)
             worker.start()
 
         def on_logs_clicked(event):
             self.console_ctrl.SetValue("")
-            worker = FlashingThread(self, "dummy", self._port, show_logs=True)
+            worker = FlashingThread(self, "dummy", self._port, self._flashscheme, show_logs=True)
             worker.start()
 
         def on_select_port(event):
             choice = event.GetEventObject()
             self._port = choice.GetString(choice.GetSelection())
+        
+        def on_select_flashscheme(event):
+            choice = event.GetEventObject()
+            selection = choice.GetString(choice.GetSelection())
+            self._flashscheme = ESP32_FLASH_SCHEME_MAP[selection]
 
         def on_pick_file(event):
             self._firmware = event.GetPath().replace("'", "")
@@ -242,6 +254,13 @@ class MainFrame(wx.Frame):
         serial_boxsizer.AddStretchSpacer(0)
         serial_boxsizer.Add(reload_button, 0, wx.ALIGN_NOT, 20)
 
+        self.flashscheme_choice = wx.Choice(panel, choices=list(ESP32_FLASH_SCHEME_MAP.keys()))
+        self.flashscheme_choice.Bind(wx.EVT_CHOICE, on_select_flashscheme)
+        #
+        flashscheme_boxsizer = wx.BoxSizer(wx.HORIZONTAL)
+        flashscheme_boxsizer.Add(self.flashscheme_choice, 1, wx.EXPAND)
+        flashscheme_boxsizer.AddStretchSpacer(0)
+
         button = wx.Button(panel, -1, "Flash ESP")
         button.Bind(wx.EVT_BUTTON, on_clicked)
 
@@ -265,6 +284,7 @@ class MainFrame(wx.Frame):
 
         port_label = wx.StaticText(panel, label="Serial port")
         file_label = wx.StaticText(panel, label="Firmware")
+        flashscheme_label = wx.StaticText(panel, label="Flash scheme")
 
         console_label = wx.StaticText(panel, label="Console")
 
@@ -273,6 +293,9 @@ class MainFrame(wx.Frame):
                 # Port selection row
                 port_label,
                 (serial_boxsizer, 1, wx.EXPAND),
+                # Flash scheme selection row
+                flashscheme_label,
+                (flashscheme_boxsizer, 1, wx.EXPAND),
                 # Firmware selection row (growable)
                 file_label,
                 (file_picker, 1, wx.EXPAND),
@@ -287,7 +310,7 @@ class MainFrame(wx.Frame):
                 (self.console_ctrl, 1, wx.EXPAND),
             ]
         )
-        fgs.AddGrowableRow(4, 1)
+        fgs.AddGrowableRow(5, 1)
         fgs.AddGrowableCol(1, 1)
         hbox.Add(fgs, proportion=2, flag=wx.ALL | wx.EXPAND, border=15)
         panel.SetSizer(hbox)
@@ -314,9 +337,9 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
     # pylint: disable=invalid-name
     def OnInit(self):
         wx.SystemOptions.SetOption("mac.window-plain-transition", 1)
-        self.SetAppName("esphome-flasher (Based on NodeMCU PyFlasher)")
+        self.SetAppName("n-flasher (Based on NodeMCU PyFlasher)")
 
-        frame = MainFrame(None, "esphome-flasher (Based on NodeMCU PyFlasher)")
+        frame = MainFrame(None, "n-flasher (Based on NodeMCU PyFlasher)")
         frame.Show()
 
         return True

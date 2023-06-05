@@ -15,3 +15,15 @@ ESP32_DEFAULT_PARTITIONS = (
 HTTP_REGEX = re.compile(
     r"https?://(www\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&/=]*)"
 )
+
+ESP32_FLASH_SCHEME_MAP = {
+    "4M - 1.9M App & OTA - 190K SPIFFS": {
+        "path": "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions.min_spiffs.bin",
+    },
+    "16M - 2M App - 12.5M FAT": {
+        "path": "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions.16m_2m_app.bin",
+    },
+}
+
+WINDOW_HEIGHT = 725
+WINDOW_WIDTH = 725
