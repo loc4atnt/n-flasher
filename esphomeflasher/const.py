@@ -23,6 +23,9 @@ ESP32_FLASH_SCHEME_MAP = {
     "16M - 2M App - 12.5M FAT": {
         "path": "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions.16m_2m_app.bin",
     },
+    "16M - 2.875M App - 10M SPIFFS": {
+        "path": "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions_app2944k_spiffs10M.bin",
+    },
 }
 
 WINDOW_HEIGHT = 725
