@@ -20,6 +20,9 @@ ESP32_FLASH_SCHEME_MAP = {
     "4M - 1.9M App & OTA - 190K SPIFFS": {
         "path": "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions.min_spiffs.bin",
     },
+    "8M - 2M App - 3.9M SPIFFS": {
+        "path": "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions_app2m_spiffs3.9M.bin",
+    },
     "16M - 2M App - 12.5M FAT": {
         "path": "https://raw.githubusercontent.com/loc4atnt/n-flasher/main/partitions.16m_2m_app.bin",
     },
