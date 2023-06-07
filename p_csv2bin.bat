@@ -1,0 +1,1 @@
+"C:\Users/loc4atnt/AppData/Local/Arduino15/packages/esp32/hardware/esp32/1.0.6/tools/gen_esp32part.exe" -q "D:\loc4atnt\Workspace\n-flasher/partitions_app2944k_spiffs10M.csv" "D:\loc4atnt\Workspace\n-flasher/partitions_app2944k_spiffs10M.bin"
